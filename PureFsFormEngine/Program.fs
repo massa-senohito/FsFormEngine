@@ -1,8 +1,8 @@
 ﻿namespace FormEng
 module Main =
-  //open Xamarin.Forms
   open System.Windows.Forms
   open System
+  open System.Collections.Generic
   open System.Drawing
   open NCurGameEngine
   open System.Diagnostics
@@ -15,8 +15,39 @@ module Main =
     let mutable components = null;
     let timer = makeTimer 16
     let mutable timerHa = null
+    let mutable scriptChanged = None
     let joystick = NCDInput.init()
+    let commandQueue = new Queue<unit->unit>()
+    let scr = 
+      let mutable scr = None
+      try  
+        let loader = new ScriptLoader.ScriptLoader("fsscr.fs")
+        let changed () = 
+          let init = loader.CallInit() 
+          match init with
+          |Some scr ->
+            let f = scr
+            commandQueue.Enqueue(fun ()->
+              button1.Text <- string f
+              )
+          |None -> ()
+        scriptChanged <- Some changed
+        loader.AddScriptChangedHandler scriptChanged.Value
+        scr <- Some <| loader
+      with e ->
+        Debug.WriteLine("script init failed")
+        Debug.WriteLine(e)
+      scr
+
     let ontick (e) = 
+      if commandQueue.Count > 0 then 
+        let command = commandQueue.Dequeue()
+        command()
+      match scr with
+      |Some scr ->
+        let f = scr.CallUpdate()
+        textBox.Text <- string f.Value
+      |None -> ()
       let state = NCDInput.update(joystick)
       if NCDInput.isXMin state then
         FormUtil.setOffset button1 -1 0 

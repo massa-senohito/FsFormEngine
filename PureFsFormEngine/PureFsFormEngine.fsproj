@@ -1,11 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework> 
+    <TargetFramework>netcoreapp3.1</TargetFramework> 
+    <UseWindowsForms>true</UseWindowsForms>
 
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="fsscr.fs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="FSTypeInfo.fs" />
+    <Compile Include="ScriptLoader.fs" />
     <Compile Include="NCDInput.fs" />
     <Compile Include="FormUtil.fs" />
     <Compile Include="HPWindow.fs" />
@@ -22,10 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FSharp.Compiler.Service" Version="39.0.0" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.Windows.Forms" />
+    <PackageReference Update="FSharp.Core" Version="5.0.1" />
   </ItemGroup>
 </Project>
