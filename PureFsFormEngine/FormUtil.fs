@@ -13,8 +13,10 @@ module FormUtil =
     //let im = new Image()
     Image.FromFile path
 
+  let makePoint x y =
+    new Point(x,y)
   let setPos (c:Control) x y =
-    c.Location <- new Point(x,y)
+    c.Location <- makePoint x y
   let setSize (c:Control) w h =
     c.Size <- new Size(w,h)
 

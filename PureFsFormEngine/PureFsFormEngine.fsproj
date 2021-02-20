@@ -7,13 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="FormUtil.fs" />
+    <Compile Include="FormActor.fs" />
+    <Compile Include="ScrTest.fs" />
     <None Include="fsscr.fs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="FSTypeInfo.fs" />
     <Compile Include="ScriptLoader.fs" />
     <Compile Include="NCDInput.fs" />
-    <Compile Include="FormUtil.fs" />
     <Compile Include="HPWindow.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
@@ -30,6 +32,10 @@
   <ItemGroup>
     <PackageReference Include="FSharp.Compiler.Service" Version="39.0.0" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GameBaseLib\GameBaseLib.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
