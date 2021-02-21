@@ -15,6 +15,9 @@ module FormUtil =
 
   let makePoint x y =
     new Point(x,y)
+  let makeSize x y =
+    new Size(x,y)
+
   let setPos (c:Control) x y =
     c.Location <- makePoint x y
   let setSize (c:Control) w h =
@@ -39,6 +42,7 @@ module FormUtil =
     let c = new TextBox()
     setPos c x y
     setSize c w h
+    c.Multiline <- true
     c
 
   let makeTimer interval =

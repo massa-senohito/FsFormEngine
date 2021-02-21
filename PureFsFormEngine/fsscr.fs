@@ -1,29 +1,58 @@
 #r "GameBaseLib.dll"
 open GameBaseLib
+open System
 open Types
-let init self=
-  self.RenderType <- Button
-let playerUpdate input =
-  let x = input.Input.X * 5
-  let y = input.Input.Y * 5
-  addPos input.Self x y
+let initAsWindow self=
+  self.RenderType <- Window
 
-let ac1 = makeActor "we2" 125 111 init playerUpdate
-let ac2 = makeFixedActor "we3" 240 243
+let mutable cnt = 0
+let texts =
+  [
+    "hoge"
+    "fuga"
+    "ho"
+  ]
+let getPage ()=
+  let cur = texts.[cnt]
+  cnt <- cnt + 1
+  let len = List.length texts
+  if cnt = len then
+    cnt <- 0
+  cur
+
+let mutable yPos = 0.0f
+
+let rand = new Random()
+let flRand() = rand.NextDouble() * 400.0 |> float32
+let ac3 x y = makeActor "spawnedActor1" x y init nullUpdate
+let playerUpdate updInfo env =
+  let inputb = updInfo.Input
+  let x = inputb.X * 5.0f
+  let y = inputb.Y * 5.0f
+  let pos = updInfo.Self.Pos
+  let select = isPressedThisFrame 2 updInfo.Input
+  //if isPressedThisFrame 2 updInfo.Input then
+  //  updInfo.Self.Name <- getPage ()
+  if inputb.Buttons.[1] then
+    updInfo.Self.Pos.X <- pos.X + 1.0f
+  //addPos self x y
+  if isAxisYThisFrame updInfo.Input then
+    //yPos <- yPos + inputb.Y
+    //updInfo.Self.Name <- string yPos
+    //Debug.WriteLine("thisFrame")
+    addActor env <| ac3 (flRand()) (flRand())
+  addScale updInfo.Self x y
+
+let ac1 = makeActor "actor1" 125.0f 111.0f initAsWindow playerUpdate
+let mutable ac2 = None
+let oncl s e =
+  ac2.Value.Name <- "cled"
+ac2 <- Some <| makeClickableActor "actor2" 240.0f 243.0f ignore nullUpdate oncl
 
 let initScr =
-  let acList = [ac1;ac2]
+  let acList = [ac1;ac2.Value]
   acList
+let initWorld w = ()
+let nullWorldUpd e = ()
+makeWorld initScr [] initWorld nullWorldUpd
 
-let initWorld () =
-  ()
-let update input =
-  ()
-let mutable cnt = 10000
-let upd () = 
-  cnt <- cnt - 1
-  //cnt
-  //hoge
-  []
-let updData = ("update" , upd)
-makeWorld initScr [] initWorld update

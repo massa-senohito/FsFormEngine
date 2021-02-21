@@ -27,6 +27,7 @@ module ScriptLoader=
     let onUpdateScript (e:FileSystemEventArgs) = initEngine()
     let watcher = 
       let w = new FileSystemWatcher()
+      // todo fileNameの親フォルダに
       w.Path <- "."
       w.Filter <- "*.fs"
       w.EnableRaisingEvents <- true

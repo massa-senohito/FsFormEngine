@@ -9,4 +9,8 @@
     <Compile Include="Types.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+  </ItemGroup>
 </Project>

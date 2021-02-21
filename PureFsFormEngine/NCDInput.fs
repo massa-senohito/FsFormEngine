@@ -12,23 +12,39 @@ module NCDInput =
       |None -> ()
     new Joystick(input, guid);
 
+  let lower = 34000
   let center = 30000
   let isXMin (state :JoystickState) =
-    //0 < state.X && 
     state.X < center
   let isXMax (state :JoystickState) =
-    34000 < state.X && state.X < 66000
+    lower < state.X
   let isYMin (state :JoystickState) =
-    //0 < state.Y && 
     state.Y < center
   let isYMax (state :JoystickState) =
-    34000 < state.Y && state.Y < 66000
+    lower < state.Y
+  let isRXMin (state :JoystickState) =
+    state.Z < center
+  let isRYMin (state :JoystickState) =
+    state.RotationZ < center
+
+  let isRXMax (state :JoystickState) =
+    lower < state.Z
+  let isRYMax (state :JoystickState) =
+    lower < state.RotationZ
+
+  let A(state :JoystickState) =
+    state.Buttons.[2]
+  let B(state :JoystickState) =
+    state.Buttons.[1]
+  //let up 0 right 9000 down 18000 left 27000
 
   let init() =
     let findDevices (dtype:DeviceType) = [for i in input.GetDevices(dtype, DeviceEnumerationFlags.AllDevices)->i]
     let stick = findDevices DeviceType.Joystick
     let pad = findDevices DeviceType.Gamepad
-    initByGUID pad.Head.InstanceGuid None
+    let joy = initByGUID pad.Head.InstanceGuid None
+    //joy.GetObjects()
+    joy
 
   let update(stick:Joystick) =
     try 
