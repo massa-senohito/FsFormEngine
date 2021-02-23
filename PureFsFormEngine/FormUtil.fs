@@ -15,6 +15,9 @@ module FormUtil =
 
   let makePoint x y =
     new Point(x,y)
+  let makePointF x y =
+    new PointF(x,y)
+
   let makeSize x y =
     new Size(x,y)
 
@@ -54,3 +57,18 @@ module FormUtil =
   let show (c:Control) = c.Visible <-true
   let addControl (cs:Control.ControlCollection) c =
     cs.Add(c)
+
+  let makePen (color:Color) w =
+    new Pen(color,w)
+
+  let drawLine (g:Graphics) pen (p1:Point) p2=
+    g.DrawLine(pen , p1 , p2)
+
+  open SharpDX
+  let v2ToPoint (v:Vector2) =
+    let ix = int v.X
+    let iy = int v.Y
+    makePoint ix iy
+
+  let v2ToPointF (v:Vector2) =
+    makePointF v.X v.Y

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="SharpDXUtil.fs" />
     <Compile Include="Types.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>

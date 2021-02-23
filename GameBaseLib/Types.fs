@@ -1,6 +1,7 @@
 ﻿namespace GameBaseLib
 open System
 open System.Diagnostics
+open SharpDXUtil
 open SharpDX
 type f32 = float32
 type Input =
@@ -10,7 +11,7 @@ type Input =
     Buttons : bool array
   }
 type IRender =
-  abstract member Draw : x:f32 -> y:f32 -> w:f32 -> f32 -> unit
+  abstract member Draw : unit -> unit
   abstract member SetText : string -> unit
 //type Component ()=
   
@@ -41,6 +42,8 @@ and Window =
 and RenderType =
   |Button
   |Window
+  |DebugDraw
+
 and GameEnv =
   {
     mutable ActorList  : Actor list
@@ -59,8 +62,21 @@ and FuncInfo =
     Update : UpdateInfo -> unit
   }
 
+type DebugColor =
+  {
+    R : int
+    G : int
+    B : int
+    A : int
+  }
+type DebugLine =
+  {
+    Color : DebugColor
+    P1 : Vector2
+    P2 : Vector2
+  }
+
 module Types=
-  let makeVec x y = new Vector2(x,y)
   let init self=
     ()
   let addPos (a:Actor) x y = 
@@ -108,4 +124,7 @@ module Types=
   let isAxisYThisFrame (input:Input) =
     input.Y <> snd stick
 
-
+  // envに突っ込むか
+  // 通常actorはDebugDraw
+  let debugDrawLine color x1 y1 x2 y2 =
+    { Color = color ; P1 = makeVec x1 y1 ; P2 = makeVec x2 y2  }

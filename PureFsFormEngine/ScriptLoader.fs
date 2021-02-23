@@ -4,7 +4,7 @@ module ScriptLoader=
   open System.IO
   open GameBaseLib
   open System.Windows.Forms
-  type ScriptLoader(fileName) as t =
+  type ScriptLoader(fileName) =
     let mutable gameEnv = None
     let initEngine() =
       let evalRes = new ScrEngine.FSTypeInfo.EvalResult()

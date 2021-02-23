@@ -13,38 +13,40 @@ module Main =
   open System.Diagnostics
   open FormUtil
   open GameBaseLib
-  let makeActor (i:Actor) =
-    i.Init i
+  let makeIRender(i:Actor) g pen =
     let x = i.Pos.X |> int
     let y = i.Pos.Y |> int
-    let c,control = match i.RenderType with
+    match i.RenderType with
     |Button ->
       let c = makeButton x y 40 40 
       c.Click.AddHandler i.OnClick
-      c :> Control,AbstructControl.Button c
+      new ActorControl( c,i) :> AbstructControl
     |Window -> 
       let c = makeTextbox x y 80 80
-      c :> Control,AbstructControl.TextBox c
-    let actorControl = new ActorControl(control, i)
-    i.Render <- Some <|( actorControl :> IRender)
-    actorControl.Control.Text <- i.Name
+      new ActorControl( c,i) :> AbstructControl
+    |DebugDraw -> new DebugActor(g , pen , i) :> AbstructControl
+
+  let makeActor (i:Actor) g pen =
+    i.Init i
+    let actorControl = makeIRender i g pen
+    i.Render <- Some <|( actorControl.Render)
     actorControl
 
   let debug s = Debug.WriteLine <| s + " logged"
 
   type StartupForm() as this = 
     inherit Form()
-    let button1 = makeButton 1 4 40 40
-    let textBox = makeTextbox 1 80 90 40
     let addControl (c:Control) =
       debug (" addcontrol " + c.Name)
       addControl this.Controls c
     let mutable components = null;
-    let timer = makeTimer 16
+    let timer = makeTimer 33
     let mutable timerHa = null
     let mutable scriptChanged = None
     let mutable spawnedActor = []
     let joystick = NCDInput.init()
+    let g = this.CreateGraphics()
+    let pen = makePen Color.Black 2.0f
     let commandQueue = new Queue<unit->unit>()
     let mayScr = 
       let mutable scr = None
@@ -59,8 +61,9 @@ module Main =
             commandQueue.Enqueue(fun ()->
               scr.Func.Init()
               this.SuspendLayout();
-              for (i:ActorControl) in spawnedActor do
-                this.Controls.Remove(i.Control)
+              for (i:AbstructControl) in spawnedActor do
+                //this.Controls.Remove(i.Control)
+                i.RemoveControl this
                 debug(i.Actor.Name + "will remove")
                 let d = i :> IDisposable
                 d.Dispose()
@@ -89,6 +92,22 @@ module Main =
         Debug.WriteLine(e)
       scr
 
+    let onActorTick i input env=
+      // buttonも渡してアクセスできるようにするか
+      let update = Types.makeUpdate i input
+      try
+        i.Update update env
+      with e ->
+        Debug.WriteLine e
+      if i.Render.IsSome then
+        let ren = i.Render.Value
+        ren.Draw ()
+        ren.SetText i.Name
+      if i.Render.IsNone then
+        let actorControl = makeActor i g pen
+        actorControl.AddControl this
+        spawnedActor <- actorControl :: spawnedActor
+
     let ontick (e) = 
       if commandQueue.Count > 0 then 
         let command = commandQueue.Dequeue()
@@ -96,13 +115,13 @@ module Main =
 
       let state = NCDInput.update(joystick)
       let mutable dir = Vector2.Zero
-      if NCDInput.isXMin state then
+      if NCDInput.isLeft state then
         dir.X <- -1.0f
-      if NCDInput.isXMax state then
+      if NCDInput.isRight state then
         dir.X <- 1.0f
-      if NCDInput.isYMin state then
+      if NCDInput.isUp state then
         dir.Y <- -1.0f
-      if NCDInput.isYMax state then
+      if NCDInput.isDown state then
         dir.Y <- 1.0f
 
       let mayActorList =
@@ -116,38 +135,23 @@ module Main =
         let env,actorList = mayActorList.Value 
         let input = Types.makeInput dir state.Buttons
         for i in actorList do
-          // buttonも渡してアクセスできるようにするか
-          let update = Types.makeUpdate i input
-          try
-            i.Update update env
-          with e ->
-            Debug.WriteLine e
-          if i.Render.IsSome then
-            let x = i.Pos.X
-            let y = i.Pos.Y
-            let w = i.Scale.X
-            let h = i.Scale.Y
-            let ren = i.Render.Value
-            ren.Draw x y w h
-            ren.SetText i.Name
-          if i.Render.IsNone then
-            let actorControl = makeActor i
-            addControl actorControl.Control
-            spawnedActor <- actorControl :: spawnedActor
+          onActorTick i input env
         // heart beat
         Types.updateInput input
         env.Clean()
+        //this.Invalidate()
 
+    let mutable pos = makePoint 10 10
     do
         components <- new ComponentModel.Container( );
         // こちらに初期化を移動させる 
+        this.SetStyle(ControlStyles.DoubleBuffer ||| ControlStyles.UserPaint ||| ControlStyles.AllPaintingInWmPaint , true)
         //this.Load
         this.SuspendLayout();
         this.AutoScaleMode <- AutoScaleMode.None;
         this.ClientSize <- new Size( 800 , 450 );
         this.Text <- "Form1";
 
-        button1.Name <- "button1"
         timerHa <- timer.Tick.Subscribe ontick
         this.Closing.Add(fun e->timerHa.Dispose())
         let playerui = new HPWindow.HPWindow("player",30,30)
@@ -156,6 +160,18 @@ module Main =
         FormUtil.setPos ui 250 150
         this.ResumeLayout(false)
         this.PerformLayout()
+    override t.OnPaint (e:PaintEventArgs) =
+      // todo e.Graphicsで描画するように変える
+      base.OnPaint e
+      g.Clear(this.BackColor)
+      //let brush = new SolidBrush(Color.Black);
+      //e.Graphics.DrawLine(pen, pos , makePoint 130 40)
+      //pos <- makePoint (pos.X + 1) (pos.Y)
+      //for i in spawnedActor do
+      //    let ren = i.Render
+      //    ren.Draw ()
+      //    ren.SetText i.Actor.Name
+
 
   [<EntryPoint; STAThread>]
   let main argv =
