@@ -69,6 +69,10 @@ module FormUtil =
     let ix = int v.X
     let iy = int v.Y
     makePoint ix iy
+  let v4ToPoint (v:Vector4) =
+    let ix = int v.X
+    let iy = int v.Y
+    makePoint ix iy
 
   let v2ToPointF (v:Vector2) =
     makePointF v.X v.Y

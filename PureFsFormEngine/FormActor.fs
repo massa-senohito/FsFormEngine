@@ -26,10 +26,11 @@ module FormActor =
     override t.Actor  = a
     interface IRender with
        //member this.Draw (m:Matrix) =
-       member this.Draw ()=
+       member t.Draw ()=
          //let t = m.TranslationVector
          //let s = m.ScaleVector
-         let rectVert = SharpDXUtil.rectVert a.Pos a.Scale |> List.map v2ToPoint |> List.toArray
+         let trans v = Vector3.Transform( v , t.Actor.Mat )
+         let rectVert = SharpDXUtil.rect |> List.map trans |> List.map v4ToPoint |> List.toArray
          g.DrawLines(pen,rectVert)
 
        member this.SetText txt =

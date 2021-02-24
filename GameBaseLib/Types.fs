@@ -19,8 +19,9 @@ type IRender =
 type Actor =
   {
     mutable Name : string
-    mutable Pos : Vector2
-    mutable Scale : Vector2
+    //mutable Pos : Vector2
+    //mutable Scale : Vector2
+    mutable Mat : Matrix
     mutable Render:IRender option
     Init : Actor -> unit
     Update : UpdateInfo -> GameEnv -> unit
@@ -28,6 +29,49 @@ type Actor =
     mutable RenderType : RenderType
     OnClick : EventHandler
   }
+  member t.Pos3 = t.Mat.TranslationVector
+  member t.Scale3 = t.Mat.ScaleVector
+  member t.Pos = makeVec t.Pos3.X t.Pos3.Y
+  member t.Scale = makeVec t.Scale3.X t.Scale3.Y
+  member t.SetPos x y =
+    t.Mat.TranslationVector <-
+      makeV3 x y 0.0f
+  member t.AddPos x y =
+    t.Mat.TranslationVector <- t.Pos3 + 
+      makeV3 x y 0.0f
+  member t.AddScale x y =
+    //Debug.Assert( t.Scale.X > 0.0f)
+    // https://forums.cgsociety.org/t/getting-negative-scale-from-matrix3/1879261/2
+    t.Mat.ScaleVector <- absV3 t.Mat.ScaleVector
+    t.Mat.ScaleVector <- t.Scale3 + 
+      makeV3 x y 0.0f
+    Debug.Assert( t.Scale.X > 0.0f)
+  member t.AddRot z =
+    let preScale =  t.Scale.X 
+    t.Mat <- Matrix.RotationZ z * t.Mat
+
+  member t.Rot = Quaternion.RotationMatrix t.Mat
+  // pitch yaw roll
+  member t.EulerRot = 
+    let rot = t.Rot
+    let X,Y,Z,W = rot.X,rot.Y,rot.Z,rot.W 
+    let ww = W * W;
+    let xx = X * X;
+    let yy = Y * Y;
+    let zz = Z * Z;
+    let Singularity = 0.499f
+    let lengthSqd = xx + yy + zz + ww;
+    let singularityTest = Y * W - X * Z;
+    let singularityValue = Singularity * lengthSqd;
+    if singularityTest > singularityValue
+      then new Vector3(-2.0f * atan2 Z W , 90.0f, 0.0f)
+      else if singularityTest < -singularityValue
+        then new Vector3(2.0f * atan2 Z  W , -90.0f, 0.0f)
+        else new Vector3(
+                    atan2 (2.0f * (Y * Z + X * W)) (1.0f - 2.0f * (xx + yy)) ,
+                    asin(2.0f * singularityTest / lengthSqd),
+                    atan2(2.0f * (X * Y + Z * W)) (1.0f - 2.0f * (yy + zz)))
+
 and UpdateInfo =
   {
     Self : Actor
@@ -80,13 +124,11 @@ module Types=
   let init self=
     ()
   let addPos (a:Actor) x y = 
-    let pos = a.Pos
-    a.Pos.X <- pos.X + x
-    a.Pos.Y <- pos.Y + y
+    a.AddPos x y
   let addScale (a:Actor) x y = 
-    let sca = a.Scale
-    a.Scale.X <- sca.X + x
-    a.Scale.Y <- sca.Y + y
+    a.AddScale x y
+  let addRot (a:Actor) z = 
+    a.AddRot z
 
   let controllerUpdate (input:UpdateInfo) env =
     addPos input.Self input.Input.X input.Input.Y
@@ -99,7 +141,7 @@ module Types=
     new EventHandler( fun s e ->())
 
   let makeFixedActor name x y = 
-    {Name = name ; Pos = makeVec x y ; Scale = makeVec 40.0f 40.0f ; Init = init ; Update = nullUpdate ;
+    {Name = name ; Mat = makeMtx ( makeV3Z x y ) (makeV3Z 40.0f 40.0f ) (Quaternion.Identity); Init = init ; Update = nullUpdate ;
      Render = None ; ChildList = [] ; RenderType = Button ; OnClick = nullClicked}
   let makeControllableActor name x y = { makeFixedActor name x y with Init = init ; Update = controllerUpdate}
   let makeClickableActor name x y ini upd cl = { makeFixedActor name x y with Init = ini ; Update = upd ; OnClick = new EventHandler( cl)}
