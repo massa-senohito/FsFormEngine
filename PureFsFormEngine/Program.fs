@@ -101,8 +101,15 @@ module Main =
         Debug.WriteLine e
       if i.Render.IsSome then
         let ren = i.Render.Value
+        pen.Color <- Color.Black
         ren.Draw ()
         ren.SetText i.Name
+        for com in env.DebugCommand do
+          match com with
+          |Line line->
+            let color = line.Color
+            pen.Color <- Color.FromArgb(  color.A, color.R , color.G , color.B )
+            g.DrawLine(pen, v2ToPointF line.P1 , v2ToPointF line.P2)
       if i.Render.IsNone then
         let actorControl = makeActor i g pen
         actorControl.AddControl this

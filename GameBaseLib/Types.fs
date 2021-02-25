@@ -14,14 +14,37 @@ type IRender =
   abstract member Draw : unit -> unit
   abstract member SetText : string -> unit
 //type Component ()=
-  
+
+type DebugColor =
+  {
+    R : int
+    G : int
+    B : int
+    A : int
+  }
+//type DebugDrawCommand(c:DebugColor) =
+//  member t. Color = c
+
+//type DebugLineCommand(c:DebugColor , p1 : Vector2 , p2 : Vector2) =
+//  inherit DebugDrawCommand(c)
+//  member t.P1 = p1
+//  member t.P2 = p2
+type DebugLineCommand =
+  {
+     Color : DebugColor
+     P1 : Vector2
+     P2 : Vector2
+  }
+
+type DebugDrawCommand =
+  | Line of DebugLineCommand
 
 type Actor =
   {
     mutable Name : string
-    //mutable Pos : Vector2
-    //mutable Scale : Vector2
-    mutable Mat : Matrix
+    mutable Pos : Vector2
+    mutable Scale : Vector2
+    mutable Rot : Quaternion
     mutable Render:IRender option
     Init : Actor -> unit
     Update : UpdateInfo -> GameEnv -> unit
@@ -29,28 +52,26 @@ type Actor =
     mutable RenderType : RenderType
     OnClick : EventHandler
   }
-  member t.Pos3 = t.Mat.TranslationVector
-  member t.Scale3 = t.Mat.ScaleVector
-  member t.Pos = makeVec t.Pos3.X t.Pos3.Y
-  member t.Scale = makeVec t.Scale3.X t.Scale3.Y
+
+  member t.Pos3 = t.Pos |> V2ToV3
+  member t.Scale3 = t.Scale |> V2ToV3
   member t.SetPos x y =
-    t.Mat.TranslationVector <-
-      makeV3 x y 0.0f
+    t.Pos <-
+      makeVec x y
   member t.AddPos x y =
-    t.Mat.TranslationVector <- t.Pos3 + 
-      makeV3 x y 0.0f
+    t.Pos <- t.Pos + 
+      makeVec x y
   member t.AddScale x y =
     //Debug.Assert( t.Scale.X > 0.0f)
-    // https://forums.cgsociety.org/t/getting-negative-scale-from-matrix3/1879261/2
-    t.Mat.ScaleVector <- absV3 t.Mat.ScaleVector
-    t.Mat.ScaleVector <- t.Scale3 + 
-      makeV3 x y 0.0f
-    Debug.Assert( t.Scale.X > 0.0f)
+    t.Scale  <- t.Scale + 
+      makeVec x y
   member t.AddRot z =
-    let preScale =  t.Scale.X 
-    t.Mat <- Matrix.RotationZ z * t.Mat
+    // https://forums.cgsociety.org/t/getting-negative-scale-from-matrix3/1879261/2
+    // Mtxだけ持つと回転するとスケールが負になる場合もある そのため毎度計算
+    t.Rot <- (Quaternion.RotationAxis(Vector3.ForwardLH , z)) * t.Rot
+  member t.Mat = makeMtx t.Pos3 t.Scale3 t.Rot
 
-  member t.Rot = Quaternion.RotationMatrix t.Mat
+  //member t.Rot = Quaternion.RotationMatrix t.Mat
   // pitch yaw roll
   member t.EulerRot = 
     let rot = t.Rot
@@ -91,6 +112,7 @@ and RenderType =
 and GameEnv =
   {
     mutable ActorList  : Actor list
+    mutable DebugCommand : DebugDrawCommand list
     WindowList : Window list
     Func      : FuncInfo
     mutable IsDirty : bool
@@ -104,20 +126,6 @@ and FuncInfo =
   {
     Init   : unit -> unit
     Update : UpdateInfo -> unit
-  }
-
-type DebugColor =
-  {
-    R : int
-    G : int
-    B : int
-    A : int
-  }
-type DebugLine =
-  {
-    Color : DebugColor
-    P1 : Vector2
-    P2 : Vector2
   }
 
 module Types=
@@ -141,13 +149,15 @@ module Types=
     new EventHandler( fun s e ->())
 
   let makeFixedActor name x y = 
-    {Name = name ; Mat = makeMtx ( makeV3Z x y ) (makeV3Z 40.0f 40.0f ) (Quaternion.Identity); Init = init ; Update = nullUpdate ;
+    //makeMtx ( makeV3Z x y ) (makeV3Z 40.0f 40.0f ) (Quaternion.Identity)
+    {Name = name ; Pos = makeVec x y ; Scale = makeVec 40.0f 40.0f; Rot = Quaternion.Identity; Init = init ; Update = nullUpdate ;
      Render = None ; ChildList = [] ; RenderType = Button ; OnClick = nullClicked}
   let makeControllableActor name x y = { makeFixedActor name x y with Init = init ; Update = controllerUpdate}
   let makeClickableActor name x y ini upd cl = { makeFixedActor name x y with Init = ini ; Update = upd ; OnClick = new EventHandler( cl)}
   let makeActor name x y ini upd = { makeFixedActor name x y with Init = ini ; Update = upd}
   let makeTextBox name x y = {Text = "" ; Actor = makeFixedActor name x y; OnInput = onInput}
-  let makeWorld actorList windowList init upd = {ActorList = actorList ; WindowList = windowList ; Func = {Init = init ;Update = upd} ; IsDirty = false}
+  let makeWorld actorList windowList init upd = 
+    {ActorList = actorList ; WindowList = windowList ; DebugCommand = [] ; Func = {Init = init ;Update = upd} ; IsDirty = false}
   let makeInput (dir:Vector2) buttons = {X = dir.X ; Y = dir.Y ; Buttons = buttons}
   let makeUpdate self update = { Self = self ; Input = update ; }
   let addActor (w:GameEnv) a =
@@ -169,4 +179,6 @@ module Types=
   // envに突っ込むか
   // 通常actorはDebugDraw
   let debugDrawLine color x1 y1 x2 y2 =
-    { Color = color ; P1 = makeVec x1 y1 ; P2 = makeVec x2 y2  }
+    //new DebugLineCommand( color , makeVec x1 y1 , makeVec x2 y2 )
+    Line { Color = color ; P1 = makeVec x1 y1 ; P2 = makeVec x2 y2 }
+  let debugRed = {R = 255 ; G = 0 ; B =0 ; A = 255 }
