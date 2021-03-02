@@ -102,3 +102,14 @@ module NCDInput =
     let state = stick.GetCurrentState()
     state
 
+  let getDir state =
+    let mutable dir = SharpDX.Vector2.Zero
+    if isLeft state then
+      dir.X <- -1.0f
+    if isRight state then
+      dir.X <- 1.0f
+    if isUp state then
+      dir.Y <- -1.0f
+    if isDown state then
+      dir.Y <- 1.0f
+    dir

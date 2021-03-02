@@ -45,7 +45,7 @@ module Main =
     let mutable scriptChanged = None
     let mutable spawnedActor = []
     let joystick = NCDInput.init()
-    let g = this.CreateGraphics()
+    let mutable (g:Graphics) = null
     let pen = makePen Color.Black 2.0f
     let commandQueue = new Queue<unit->unit>()
     let mayScr = 
@@ -158,7 +158,7 @@ module Main =
         this.AutoScaleMode <- AutoScaleMode.None;
         this.ClientSize <- new Size( 800 , 450 );
         this.Text <- "Form1";
-
+        g <- this.CreateGraphics()
         timerHa <- timer.Tick.Subscribe ontick
         this.Closing.Add(fun e->timerHa.Dispose())
         let playerui = new HPWindow.HPWindow("player",30,30)
@@ -184,6 +184,11 @@ module Main =
   let main argv =
     Application.EnableVisualStyles()
     Application.SetCompatibleTextRenderingDefault(false)
-    use form = new StartupForm()
-    Application.Run(form)   
+    let useMMD = false
+    if(useMMD) then
+      let f = new MMDEng.MMDRenderEngine.FormHolder()
+      ()
+    else
+      use form = new StartupForm()
+      Application.Run(form)   
     0 // return an integer exit code

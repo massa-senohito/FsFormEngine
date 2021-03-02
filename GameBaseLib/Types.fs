@@ -51,10 +51,11 @@ type Actor =
     ChildList : Actor list
     mutable RenderType : RenderType
     OnClick : EventHandler
+    ParamPath : string option
   }
 
   member t.Pos3 = t.Pos |> V2ToV3
-  member t.Scale3 = t.Scale |> V2ToV3
+  member t.Scale3 = t.Scale |> V2ToV3Z1
   member t.SetPos x y =
     t.Pos <-
       makeVec x y
@@ -151,10 +152,11 @@ module Types=
   let makeFixedActor name x y = 
     //makeMtx ( makeV3Z x y ) (makeV3Z 40.0f 40.0f ) (Quaternion.Identity)
     {Name = name ; Pos = makeVec x y ; Scale = makeVec 40.0f 40.0f; Rot = Quaternion.Identity; Init = init ; Update = nullUpdate ;
-     Render = None ; ChildList = [] ; RenderType = Button ; OnClick = nullClicked}
+     Render = None ; ChildList = [] ; RenderType = Button ; OnClick = nullClicked ; ParamPath = None}
   let makeControllableActor name x y = { makeFixedActor name x y with Init = init ; Update = controllerUpdate}
   let makeClickableActor name x y ini upd cl = { makeFixedActor name x y with Init = ini ; Update = upd ; OnClick = new EventHandler( cl)}
   let makeActor name x y ini upd = { makeFixedActor name x y with Init = ini ; Update = upd}
+
   let makeTextBox name x y = {Text = "" ; Actor = makeFixedActor name x y; OnInput = onInput}
   let makeWorld actorList windowList init upd = 
     {ActorList = actorList ; WindowList = windowList ; DebugCommand = [] ; Func = {Init = init ;Update = upd} ; IsDirty = false}

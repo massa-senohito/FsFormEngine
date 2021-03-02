@@ -1,0 +1,3 @@
+[submodule "MikuMikuFlex"]
+	path = MikuMikuFlex
+	url = https://github.com/massa-senohito/MikuMikuFlex

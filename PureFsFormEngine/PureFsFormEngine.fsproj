@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="NCDInput.fs" />
     <Compile Include="Either.fs" />
     <Compile Include="FormUtil.fs" />
     <Compile Include="FormActor.fs" />
@@ -16,27 +17,22 @@
     </None>
     <Compile Include="FSTypeInfo.fs" />
     <Compile Include="ScriptLoader.fs" />
-    <Compile Include="NCDInput.fs" />
+    <Compile Include="MMDEngine\MMDActor.fs" />
+    <Compile Include="MMDEngine\MMDRenderEngine.fs" />
     <Compile Include="HPWindow.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--COMReference Include="{215d64d2-031c-33c7-96e3-61794cd1ee61}">
-      <Guid>215d64d2-031c-33c7-96e3-61794cd1ee61</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>4</VersionMinor>
-      <WrapperTool>tlbimp</WrapperTool>
-    </COMReference -->
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="DSoft.SharpDX.Desktop" Version="4.2.0" />
     <PackageReference Include="FSharp.Compiler.Service" Version="39.0.0" />
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GameBaseLib\GameBaseLib.fsproj" />
+    <ProjectReference Include="..\MikuMikuFlex\FSharpRenderEngine\FSharpRenderEngine.fsproj" />
+    <ProjectReference Include="..\MikuMikuFlex\MikuMikuFlex3\MikuMikuFlex3.csproj" />
   </ItemGroup>
 
   <ItemGroup>
